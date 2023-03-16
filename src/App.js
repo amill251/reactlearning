@@ -41,16 +41,25 @@ const App = () => {
       if (window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)) {
         const updatedPerson = { ...existingPerson, number: newNumber };
 
-        personsService.update(existingPerson.id, updatedPerson).then((returnedPerson) => {
-          setPersons(
-            persons.map((person) =>
-              person.id !== returnedPerson.data.id ? person : returnedPerson.data
-            )
-          );
-          setNewName('');
-          setNewNumber('');
-          showNotification(`Updated ${newName}`);
-        });
+        personsService
+          .update(existingPerson.id, updatedPerson)
+          .then((returnedPerson) => {
+            setPersons(
+              persons.map((person) =>
+                person.id !== returnedPerson.data.id ? person : returnedPerson.data
+              )
+            );
+            setNewName('');
+            setNewNumber('');
+            showNotification(`Updated ${newName}`, 'success');
+          })
+          .catch((error) => {
+            showNotification(
+              `Information of ${existingPerson.name} has already been removed from server`,
+              'error'
+            );
+            setPersons(persons.filter((person) => person.id !== existingPerson.id));
+          });
       }
     } else {
       const newPerson = {
@@ -62,7 +71,7 @@ const App = () => {
         setPersons(persons.concat(returnedPerson.data));
         setNewName('');
         setNewNumber('');
-        showNotification(`Added ${newName}`);
+        showNotification(`Added ${newName}`, 'success');
       });
     }
   };
@@ -73,7 +82,7 @@ const App = () => {
     if (window.confirm(`Delete ${personToDelete.name}?`)) {
       personsService.deletePerson(id).then(() => {
         setPersons(persons.filter((person) => person.id !== id));
-        showNotification(`Deleted ${personToDelete.name}`);
+        showNotification(`Deleted ${personToDelete.name}`, 'success');
       });
     }
   };
@@ -83,13 +92,13 @@ const App = () => {
       person.name.toLowerCase().includes(searchTerm.toLowerCase()))
     : persons;
 
-  const showNotification = (message) => {
-    setNotificationMessage(message);
-    setTimeout(() => {
-      setNotificationMessage(null);
-    }, 5000);
-  };
-
+    const showNotification = (message, type) => {
+      setNotificationMessage({ message, type });
+      setTimeout(() => {
+        setNotificationMessage(null);
+      }, 5000);
+    };
+    
   return (
     <div>
       <h2>Phonebook</h2>
