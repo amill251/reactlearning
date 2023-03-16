@@ -13,11 +13,17 @@ const App = () => {
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    const newPerson = {
-      name: newName
-    };
+    const isNameExist = persons.some(person => person.name.toLowerCase() === newName.toLowerCase());
 
-    setPersons(persons.concat(newPerson));
+    if (isNameExist) {
+      alert(`${newName} is already added to phonebook`);
+    } else {
+      const newPerson = {
+        name: newName
+      };
+
+      setPersons(persons.concat(newPerson));
+    }
     setNewName('');
   };
 
