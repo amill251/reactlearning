@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import personsService from './Service';
 import axios from 'axios';
 import Filter from './Filter';
 import PersonForm from './PersonForm';
@@ -11,7 +12,7 @@ const App = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    axios.get('http://localhost:3001/persons').then((response) => {
+    personsService.getAll().then((response) => {
       setPersons(response.data);
     });
   }, []);
@@ -34,18 +35,45 @@ const App = () => {
     const existingPerson = persons.find((person) => person.name === newName);
 
     if (existingPerson) {
-      alert(`${newName} is already added to the phonebook`);
+      if (
+        window.confirm(
+          `${newName} is already added to phonebook, replace the old number with a new one?`
+        )
+      ) {
+        const updatedPerson = { ...existingPerson, number: newNumber };
+
+        personsService
+          .update(existingPerson.id, updatedPerson)
+          .then((returnedPerson) => {
+            setPersons(
+              persons.map((person) =>
+                person.id !== existingPerson.id ? person : returnedPerson.data
+              )
+            );
+            setNewName('');
+            setNewNumber('');
+          });
+      }
     } else {
       const newPerson = {
         name: newName,
         number: newNumber,
-        id: persons.length + 1,
       };
 
-      axios.post('http://localhost:3001/persons', newPerson).then((response) => {
+      personsService.create(newPerson).then((response) => {
         setPersons(persons.concat(response.data));
         setNewName('');
         setNewNumber('');
+      });
+    }
+  };
+
+  const handleDelete = (id) => {
+    const personToDelete = persons.find((person) => person.id === id);
+
+    if (window.confirm(`Delete ${personToDelete.name}?`)) {
+      personsService.deletePerson(id).then(() => {
+        setPersons(persons.filter((person) => person.id !== id));
       });
     }
   };
@@ -69,7 +97,7 @@ const App = () => {
         handleNumberChange={handleNumberChange}
       />
       <h3>Numbers</h3>
-      <Persons persons={filteredPersons} />
+      <Persons persons={filteredPersons} handleDelete={handleDelete} />
     </div>
   );
 };
