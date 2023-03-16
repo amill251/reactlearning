@@ -31,44 +31,47 @@ const App = () => {
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    const isNameExist = persons.some(person => person.name.toLowerCase() === newName.toLowerCase());
+    const existingPerson = persons.find((person) => person.name === newName);
 
-    if (isNameExist) {
-      alert(`${newName} is already added to phonebook`);
+    if (existingPerson) {
+      alert(`${newName} is already added to the phonebook`);
     } else {
       const newPerson = {
         name: newName,
-        number: newNumber
+        number: newNumber,
+        id: persons.length + 1,
       };
 
-      setPersons(persons.concat(newPerson));
+      axios.post('http://localhost:3001/persons', newPerson).then((response) => {
+        setPersons(persons.concat(response.data));
+        setNewName('');
+        setNewNumber('');
+      });
     }
-    setNewName('');
-    setNewNumber('');
   };
 
   const filteredPersons = searchTerm
     ? persons.filter((person) =>
-        person.name.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+      person.name.toLowerCase().includes(searchTerm.toLowerCase())
+    )
     : persons;
 
-    return (
-      <div>
-        <h2>Phonebook</h2>
-        <Filter searchTerm={searchTerm} handleSearchChange={handleSearchChange} />
-        <h3>Add a new</h3>
-        <PersonForm
-          handleSubmit={handleSubmit}
-          newName={newName}
-          handleNameChange={handleNameChange}
-          newNumber={newNumber}
-          handleNumberChange={handleNumberChange}
-        />
-        <h3>Numbers</h3>
-        <Persons persons={filteredPersons} />
-      </div>
-    );
+  return (
+    <div>
+      <h2>Phonebook</h2>
+      <Filter searchTerm={searchTerm} handleSearchChange={handleSearchChange} />
+      <h3>Add a new</h3>
+      <PersonForm
+        handleSubmit={handleSubmit}
+        newName={newName}
+        handleNameChange={handleNameChange}
+        newNumber={newNumber}
+        handleNumberChange={handleNumberChange}
+      />
+      <h3>Numbers</h3>
+      <Persons persons={filteredPersons} />
+    </div>
+  );
 };
 
 export default App;
